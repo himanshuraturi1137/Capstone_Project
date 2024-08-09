@@ -1,0 +1,136 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang2057{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil\fcharset0 Arial;}}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\qc\b\f0\fs40\lang9\par
+\par
+Project Title: Multi-Threaded Banking System\par
+\par
+
+\pard\sa200\sl276\slmult1\qj\fs24 Introduction:\b0\par
+In modern banking systems, handling multiple transactions and operations efficiently is crucial. A multi-threaded banking application can manage concurrent operations, such as account transactions, balance checks, and fund transfers, improving the system's responsiveness and throughput.\par
+\par
+This project demonstrates a basic multi-threaded banking system where multiple threads can perform operations on bank accounts concurrently. The system will ensure thread safety to prevent inconsistencies and errors due to simultaneous access.\par
+\par
+\par
+\par
+\b Motivation:\b0\par
+1. Increased Efficiency: Multi-threading allows multiple operations to be performed simultaneously, which improves the overall efficiency and responsiveness of the banking system.\par
+2. Real-Time Operations: In a real banking environment, transactions need to be processed in real-time. Multi-threading helps in handling multiple transactions at once without significant delays.\par
+3. Scalability: Multi-threaded systems can handle a growing number of users and transactions more effectively compared to single-threaded systems.\par
+\par
+\b What is Multi Threading:\par
+\b0 Multi-threading refers to the ability to execute multiple threads concurrently within a single process. A thread is the smallest unit of execution in a program, and multiple threads can run in parallel, sharing the same memory space but executing different tasks.\par
+\par
+\b Key Concepts of Multi-Threading:\par
+\b0 1. Thread: A thread is a sequence of executable commands that can be managed independently by a scheduler. Multiple threads within the same process share the same resources, such as memory space and file descriptors.\par
+2. Concurrency: Multi-threading allows concurrent execution of tasks. This means multiple threads are making progress independently but may not necessarily run simultaneously on separate cores.\par
+\par
+\par
+\b Source Code:\par
+\b0 #include <stdio.h>\par
+#include <stdlib.h>\par
+#include <pthread.h>\par
+\par
+// Define a structure to represent a bank account\par
+typedef struct \{\par
+    int balance;\par
+    pthread_mutex_t lock; // Mutex to ensure thread-safe access to balance\par
+\} BankAccount;\par
+\par
+// Function to deposit money into the bank account\par
+void* deposit(void* arg) \{\par
+    BankAccount* account = (BankAccount*)arg;\par
+    int amount = 200; // Amount to deposit\par
+\par
+    pthread_mutex_lock(&account->lock); // Lock the mutex before modifying balance\par
+    account->balance += amount;\par
+    printf("Deposited %d. New balance: %d\\n", amount, account->balance);\par
+    pthread_mutex_unlock(&account->lock); // Unlock the mutex after modifying balance\par
+\par
+    pthread_exit(NULL);\par
+\}\par
+\par
+// Function to withdraw money from the bank account\par
+void* withdraw(void* arg) \{\par
+    BankAccount* account = (BankAccount*)arg;\par
+    int amount = 150; // Amount to withdraw\par
+\par
+    pthread_mutex_lock(&account->lock); // Lock the mutex before modifying balance\par
+    if (account->balance >= amount) \{\par
+        account->balance -= amount;\par
+        printf("Withdrew %d. New balance: %d\\n", amount, account->balance);\par
+    \} else \{\par
+        printf("Insufficient funds for withdrawal of %d. Current balance: %d\\n", amount, account->balance);\par
+    \}\par
+    pthread_mutex_unlock(&account->lock); // Unlock the mutex after modifying balance\par
+\par
+    pthread_exit(NULL);\par
+\}\par
+\par
+int main() \{\par
+    pthread_t threads[4]; // Array to hold thread identifiers\par
+    BankAccount account;  // Bank account instance\par
+\par
+    // Initialize the bank account\par
+    account.balance = 1000; // Starting balance\par
+    pthread_mutex_init(&account.lock, NULL); // Initialize the mutex\par
+\par
+    // Create threads to perform deposit and withdrawal operations\par
+    pthread_create(&threads[0], NULL, deposit, (void*)&account);\par
+    pthread_create(&threads[1], NULL, deposit, (void*)&account);\par
+    pthread_create(&threads[2], NULL, withdraw, (void*)&account);\par
+    pthread_create(&threads[3], NULL, withdraw, (void*)&account);\par
+\par
+    // Wait for all threads to complete\par
+    for (int i = 0; i < 4; i++) \{\par
+        pthread_join(threads[i], NULL);\par
+    \}\par
+\par
+    // Destroy the mutex\par
+    pthread_mutex_destroy(&account.lock);\par
+\par
+    printf("Final balance: %d\\n", account.balance);\par
+\par
+    return 0;\par
+\}\par
+\par
+\b\f1\fs22 Explanation of the Code:\par
+\f0 Header Files:\b0\f1\par
+\f0 1. <stdio.h>: For input/output functions like printf.\par
+2. <stdlib.h>: For general utility functions, such as memory allocation and process control.\par
+3. <pthread.h>: For POSIX threads (pthreads) functions and types. \par
+\f1\par
+\b\f0 BankAccount Structure:\b0\f1\par
+\f0 1. 'balance': An integer representing the current balance of the bank account.\par
+2. 'lock': A 'pthread_mutex_t' mutex to manage concurrent access to the 'balance' field, ensuring that operations on the account are thread-safe.\par
+\b\par
+Deposit Function:\b0\f1\par
+\f0 1. 'pthread_mutex_lock(&account->lock)': Acquires the lock on the mutex to ensure exclusive access to the balance field.\par
+2. 'account->balance += amount': Increases the account balance by the deposit amount.\par
+3. 'printf': Prints the deposit operation and the new balance.\par
+4. 'pthread_mutex_unlock(&account->lock)': Releases the lock on the mutex, allowing other threads to access the 'balance'.\par
+5. 'pthread_exit(NULL)': Ends the thread's execution\par
+\b Withdraw Function:\b0\par
+1. 'pthread_mutex_lock(&account->lock)': Acquires the lock to ensure exclusive access to the 'balance' field.\par
+2. 'if (account->balance >= amount)': Checks if the balance is sufficient for the withdrawal.\par
+3. 'account->balance -= amount:' Decreases the account balance by the withdrawal amount if sufficient funds are available.\par
+4. 'printf': Prints either the successful withdrawal and new balance or an insufficient funds message.\par
+5. 'pthread_mutex_unlock(&account->lock)': Releases the lock on the mutex.\par
+6. 'pthread_exit(NULL)': Ends the thread's execution.\par
+\b Main Function:\b0\par
+1. 'pthread_t threads[4]': Array to store thread identifiers.\par
+2. 'BankAccount account': Instance of the 'BankAccount' structure.\par
+3. 'account.balance = 1000': Initializes the account balance to 1000.\par
+4. 'pthread_mutex_init(&account.lock, NULL)': Initializes the mutex used to protect access to the account's balance.\par
+5. 'pthread_create': Creates four threads to perform deposit and withdrawal operations concurrently.\par
+\par
+\b\fs24 Key Concepts of Multi-Threading:\par
+\b0\fs22 1. Thread: A thread is a sequence of executable commands that can be managed independently by a scheduler. Multiple threads within the same process share the same resources, such as memory space and file descriptors.\par
+2. Concurrency: Multi-threading allows concurrent execution of tasks. This means multiple threads are making progress independently but may not necessarily run simultaneously on separate cores.\par
+3. Parallelism: In a multi-core CPU, threads can execute truly in parallel, meaning threads can run simultaneously on different processors or cores.\par
+\par
+\b Summary:\b0\par
+1. Thread Safety: Mutex locks ensure that only one thread can modify the balance at a time, preventing race conditions and ensuring thread-safe operations.\par
+2. Concurrency: The program demonstrates how to create and manage multiple threads performing concurrent deposit and withdrawal operations.\par
+3. Output: The output will vary based on the execution order of threads but should always result in a consistent final balance reflecting the total deposits and withdrawals.\par
+}
+ 
